@@ -184,7 +184,7 @@ class RadioUNet_c(Dataset):
             # Will: original code doesn't divide by 255 without cars, but since self.transform(inputs) below
             # scales everything between 0-1 anyway, I decided to divide by 255 here to make code consistent.
             image_buildings=image_buildings/255
-            image_TX=image_TX/255
+            image_Tx=image_Tx/255
             inputs=np.stack([image_buildings, image_Tx], axis=2)        
         else: #cars
             #Normalization, so all settings can have the same learning rate
@@ -376,7 +376,7 @@ class RadioUNet_c_sprseIRT4(Dataset):
             # Will: original code doesn't divide by 255 without cars, but since self.transform(inputs) below
             # scales everything between 0-1 anyway, I decided to divide by 255 here to make code consistent.
             image_buildings=image_buildings/255
-            image_TX=image_TX/255
+            image_Tx=image_Tx/255
             inputs=np.stack([image_buildings, image_Tx], axis=2)        
         else: #cars
             #Normalization, so all settings can have the same learning rate
