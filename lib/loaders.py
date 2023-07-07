@@ -168,8 +168,8 @@ class RadioUNet_c(Dataset):
             #image_gainDPM = np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/255
             #image_gainIRT2 = np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/255
             w=np.random.uniform(0,self.IRT2maxW) # IRT2 weight of random average
-            image_gain= w*np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/256  \
-                        + (1-w)*np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/256
+            image_gain= w*np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/255  \
+                        + (1-w)*np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/255
         
         #pathloss threshold transform
         if self.thresh>0:
@@ -181,15 +181,17 @@ class RadioUNet_c(Dataset):
         
         #inputs to radioUNet
         if self.carsInput=="no":
+            # Will: original code doesn't divide by 255 without cars, but since self.transform(inputs) below
+            # scales everything between 0-1 anyway, I decided to divide by 255 here to make code consistent.
+            image_buildings=image_buildings/255
+            image_TX=image_TX/255
             inputs=np.stack([image_buildings, image_Tx], axis=2)        
-            #The fact that the buildings and antenna are normalized  256 and not 1 promotes convergence, 
-            #so we can use the same learning rate as RadioUNets
         else: #cars
             #Normalization, so all settings can have the same learning rate
-            image_buildings=image_buildings/256
-            image_Tx=image_Tx/256
+            image_buildings=image_buildings/255
+            image_Tx=image_Tx/255
             img_name_cars = os.path.join(self.dir_cars, name1)
-            image_cars = np.asarray(io.imread(img_name_cars))/256
+            image_cars = np.asarray(io.imread(img_name_cars))/255
             inputs=np.stack([image_buildings, image_Tx, image_cars], axis=2)
             #note that ToTensor moves the channel from the last asix to the first!
 
@@ -344,15 +346,15 @@ class RadioUNet_c_sprseIRT4(Dataset):
         #Load radio map:
         if self.simulation!="rand":
             img_name_gain = os.path.join(self.dir_gain, name2)  
-            image_gain = np.expand_dims(np.asarray(io.imread(img_name_gain)),axis=2)/256
+            image_gain = np.expand_dims(np.asarray(io.imread(img_name_gain)),axis=2)/255
         else: #random weighted average of DPM and IRT2
             img_name_gainDPM = os.path.join(self.dir_gainDPM, name2) 
             img_name_gainIRT2 = os.path.join(self.dir_gainIRT2, name2) 
             #image_gainDPM = np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/255
             #image_gainIRT2 = np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/255
             w=np.random.uniform(0,self.IRT2maxW) # IRT2 weight of random average
-            image_gain= w*np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/256  \
-                        + (1-w)*np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/256
+            image_gain= w*np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/255  \
+                        + (1-w)*np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/255
         
         #pathloss threshold transform
         if self.thresh>0:
@@ -371,15 +373,17 @@ class RadioUNet_c_sprseIRT4(Dataset):
         
         #inputs to radioUNet
         if self.carsInput=="no":
+            # Will: original code doesn't divide by 255 without cars, but since self.transform(inputs) below
+            # scales everything between 0-1 anyway, I decided to divide by 255 here to make code consistent.
+            image_buildings=image_buildings/255
+            image_TX=image_TX/255
             inputs=np.stack([image_buildings, image_Tx], axis=2)        
-            #The fact that the buildings and antenna are normalized  256 and not 1 promotes convergence, 
-            #so we can use the same learning rate as RadioUNets
         else: #cars
             #Normalization, so all settings can have the same learning rate
-            image_buildings=image_buildings/256
-            image_Tx=image_Tx/256
+            image_buildings=image_buildings/255
+            image_Tx=image_Tx/255
             img_name_cars = os.path.join(self.dir_cars, name1)
-            image_cars = np.asarray(io.imread(img_name_cars))/256
+            image_cars = np.asarray(io.imread(img_name_cars))/255
             inputs=np.stack([image_buildings, image_Tx, image_cars], axis=2)
             #note that ToTensor moves the channel from the last asix to the first!
         
@@ -535,6 +539,8 @@ class RadioUNet_s(Dataset):
         name2 = str(dataset_map_ind) + "_" + str(idxc) + ".png"
         
         #Load buildings:
+        # Will: Note that for RadioUNet_s, they already divide building and TX maps by 255 (originally 256) here,
+        # whereas in RadioUNet_c they did this at the end of __getitem__ (and mistakenly believed they didn't do it at all originally)
         if self.cityMap == "complete":
             img_name_buildings = os.path.join(self.dir_buildings, name1)
         else:
@@ -543,24 +549,24 @@ class RadioUNet_s(Dataset):
             version=np.random.randint(low=1, high=7)
             img_name_buildings = os.path.join(self.dir_buildings+str(self.missing)+"/"+str(version)+"/", name1)
             str(self.missing)
-        image_buildings = np.asarray(io.imread(img_name_buildings))/256  
+        image_buildings = np.asarray(io.imread(img_name_buildings))/255  
         
         #Load Tx (transmitter):
         img_name_Tx = os.path.join(self.dir_Tx, name2)
-        image_Tx = np.asarray(io.imread(img_name_Tx))/256
+        image_Tx = np.asarray(io.imread(img_name_Tx))/255
         
         #Load radio map:
         if self.simulation!="rand":
             img_name_gain = os.path.join(self.dir_gain, name2)  
-            image_gain = np.expand_dims(np.asarray(io.imread(img_name_gain)),axis=2)/256
+            image_gain = np.expand_dims(np.asarray(io.imread(img_name_gain)),axis=2)/255
         else: #random weighted average of DPM and IRT2
             img_name_gainDPM = os.path.join(self.dir_gainDPM, name2) 
             img_name_gainIRT2 = os.path.join(self.dir_gainIRT2, name2) 
             #image_gainDPM = np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/255
             #image_gainIRT2 = np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/255
             w=np.random.uniform(0,self.IRT2maxW) # IRT2 weight of random average
-            image_gain= w*np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/256  \
-                        + (1-w)*np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/256
+            image_gain= w*np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/255  \
+                        + (1-w)*np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/255
         
         #pathloss threshold transform
         if self.thresh>0:
@@ -569,7 +575,7 @@ class RadioUNet_s(Dataset):
             image_gain=image_gain-self.thresh*np.ones(np.shape(image_gain))
             image_gain=image_gain/(1-self.thresh)
             
-        image_gain=image_gain*256 # we use this normalization so all RadioUNet methods can have the same learning rate.
+        image_gain=image_gain*255 # we use this normalization so all RadioUNet methods can have the same learning rate.
                                   # Namely, the loss of RadioUNet_s is 256 the loss of RadioUNet_c
                                   # Important: when evaluating the accuracy, remember to devide the errors by 256!
                  
@@ -585,13 +591,11 @@ class RadioUNet_s(Dataset):
         
         #inputs to radioUNet
         if self.carsInput=="no":
-            inputs=np.stack([image_buildings, image_Tx, image_samples], axis=2)        
-            #The fact that the buildings and antenna are normalized  256 and not 1 promotes convergence, 
-            #so we can use the same learning rate as RadioUNets
+            inputs=np.stack([image_buildings, image_Tx, image_samples], axis=2)
         else: #cars
             #Normalization, so all settings can have the same learning rate
             img_name_cars = os.path.join(self.dir_cars, name1)
-            image_cars = np.asarray(io.imread(img_name_cars))/256
+            image_cars = np.asarray(io.imread(img_name_cars))/255
             inputs=np.stack([image_buildings, image_Tx, image_samples, image_cars], axis=2)
             #note that ToTensor moves the channel from the last asix to the first!
 
@@ -740,6 +744,8 @@ class RadioUNet_s_sprseIRT4(Dataset):
         name2 = str(dataset_map_ind) + "_" + str(idxc) + ".png"
         
         #Load buildings:
+        # Will: Note that for RadioUNet_s_sprseIRT4, they already divide TX maps by 255 (originally 256) here,
+        # whereas in RadioUNet_c they did this at the end of __getitem__ (and mistakenly believed they didn't do it at all originally)
         if self.cityMap == "complete":
             img_name_buildings = os.path.join(self.dir_buildings, name1)
         else:
@@ -752,20 +758,20 @@ class RadioUNet_s_sprseIRT4(Dataset):
         
         #Load Tx (transmitter):
         img_name_Tx = os.path.join(self.dir_Tx, name2)
-        image_Tx = np.asarray(io.imread(img_name_Tx))/256 
+        image_Tx = np.asarray(io.imread(img_name_Tx))/255 
         
         #Load radio map:
         if self.simulation!="rand":
             img_name_gain = os.path.join(self.dir_gain, name2)  
-            image_gain = np.expand_dims(np.asarray(io.imread(img_name_gain)),axis=2)/256
+            image_gain = np.expand_dims(np.asarray(io.imread(img_name_gain)),axis=2)/255
         else: #random weighted average of DPM and IRT2
             img_name_gainDPM = os.path.join(self.dir_gainDPM, name2) 
             img_name_gainIRT2 = os.path.join(self.dir_gainIRT2, name2) 
             #image_gainDPM = np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/255
             #image_gainIRT2 = np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/255
             w=np.random.uniform(0,self.IRT2maxW) # IRT2 weight of random average
-            image_gain= w*np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/256  \
-                        + (1-w)*np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/256
+            image_gain= w*np.expand_dims(np.asarray(io.imread(img_name_gainIRT2)),axis=2)/255  \
+                        + (1-w)*np.expand_dims(np.asarray(io.imread(img_name_gainDPM)),axis=2)/255
         
         #pathloss threshold transform
         if self.thresh>0:
@@ -774,7 +780,7 @@ class RadioUNet_s_sprseIRT4(Dataset):
             image_gain=image_gain-self.thresh*np.ones(np.shape(image_gain))
             image_gain=image_gain/(1-self.thresh)
         
-        image_gain=image_gain*256 # we use this normalization so all RadioUNet methods can have the same learning rate.
+        image_gain=image_gain*255 # we use this normalization so all RadioUNet methods can have the same learning rate.
                                   # Namely, the loss of RadioUNet_s is 256 the loss of RadioUNet_c
                                   # Important: when evaluating the accuracy, remember to devide the errors by 256!
                     
@@ -800,17 +806,15 @@ class RadioUNet_s_sprseIRT4(Dataset):
         input_samples[x_samples_in,y_samples_in]= image_gain[x_samples_in,y_samples_in,0]
         
         #normalize image_buildings, after random seed computed from it as an int
-        image_buildings=image_buildings/256
+        image_buildings=image_buildings/255
         
         #inputs to radioUNet
         if self.carsInput=="no":
             inputs=np.stack([image_buildings, image_Tx, input_samples], axis=2)        
-            #The fact that the buildings and antenna are normalized  256 and not 1 promotes convergence, 
-            #so we can use the same learning rate as RadioUNets
         else: #cars
             #Normalization, so all settings can have the same learning rate
             img_name_cars = os.path.join(self.dir_cars, name1)
-            image_cars = np.asarray(io.imread(img_name_cars))/256
+            image_cars = np.asarray(io.imread(img_name_cars))/255
             inputs=np.stack([image_buildings, image_Tx, input_samples, image_cars], axis=2)
             #note that ToTensor moves the channel from the last asix to the first!
         
